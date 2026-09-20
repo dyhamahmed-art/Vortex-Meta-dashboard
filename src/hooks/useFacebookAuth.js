@@ -35,33 +35,32 @@ export function useFacebookAuth() {
     }
 
     window.FB.login(
-      async (response) => {
+      (response) => {
         if (response.authResponse) {
-          try {
-            const shortToken = response.authResponse.accessToken
-
-            // Exchange for long-lived token via our serverless function
-            const res = await fetch('/api/fb-token-exchange', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ shortToken }),
+          const shortToken = response.authResponse.accessToken
+          fetch('/api/fb-token-exchange', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shortToken }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.longLivedToken) {
+                localStorage.setItem('fb_token', data.longLivedToken)
+                setToken(data.longLivedToken)
+              } else {
+                setError('Token exchange failed')
+              }
+              setLoading(false)
             })
-
-            const data = await res.json()
-
-            if (data.longLivedToken) {
-              localStorage.setItem('fb_token', data.longLivedToken)
-              setToken(data.longLivedToken)
-            } else {
-              setError('Token exchange failed')
-            }
-          } catch (err) {
-            setError('Login failed: ' + err.message)
-          }
+            .catch((err) => {
+              setError('Login failed: ' + err.message)
+              setLoading(false)
+            })
         } else {
           setError('Facebook login cancelled')
+          setLoading(false)
         }
-        setLoading(false)
       },
       {
         scope:
