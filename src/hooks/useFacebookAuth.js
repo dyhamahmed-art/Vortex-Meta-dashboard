@@ -62,10 +62,7 @@ export function useFacebookAuth() {
           setLoading(false)
         }
       },
-      {
-        scope:
-          'ads_read,ads_management,business_management,pages_read_engagement,read_insights',
-      }
+      { scope: 'ads_read,ads_management' }
     )
   }
 
